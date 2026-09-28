@@ -1,0 +1,290 @@
+{
+  "name": "WF8 - Invoice Document",
+  "nodes": [
+    {
+      "id": "7e407866-0654-4b95-ac74-0d4afbc0126c",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -180
+      ],
+      "parameters": {
+        "content": "WF8 — הפקת חשבונית והעלאה לדרייב\n\nכל דקה מחפש חשבונית בסטטוס \"ממתין להפקה\",\nבונה מסמך HTML בעברית RTL, מעלה לגוגל דרייב\nומחזיר את הקישור לשדה PdfUrl.\n\nצריך: credentials של Airtable, Google Drive.\nרשומה אחת בכל הרצה, כדי שמספור לא יתנגש.",
+        "height": 220,
+        "width": 480,
+        "color": 5
+      }
+    },
+    {
+      "id": "18d42bbe-1859-4c15-8028-88fa4d908ea7",
+      "name": "Every Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "51453b40-6634-4cfb-823e-452a7c26551e",
+      "name": "Find Pending",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        220,
+        200
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9kzPR67OdT2La1",
+          "mode": "id",
+          "cachedResultName": "Invoices"
+        },
+        "filterByFormula": "{Status} = \"ממתין להפקה\"",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      },
+      "retryOnFail": true
+    },
+    {
+      "id": "17413570-fd08-49e9-918a-1cdf3014e29f",
+      "name": "Build HTML",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        200
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "511847e4-ac5a-458b-bd01-20ee741e776c",
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"he\" dir=\"rtl\"><head><meta charset=\"utf-8\"><title>חשבונית מס</title>\n<style>\nbody{font-family:Arial,Helvetica,sans-serif;direction:rtl;margin:40px;color:#111}\nh1{font-size:24px;margin:0 0 4px}\n.muted{color:#666;font-size:13px}\ntable{width:100%;border-collapse:collapse;margin-top:24px}\nth,td{border:1px solid #ddd;padding:10px;text-align:right}\nth{background:#f5f5f5}\n.total{font-weight:bold;font-size:18px}\n.foot{margin-top:32px;font-size:12px;color:#666}\n</style></head><body>\n<h1>חשבונית מס</h1>\n<div class=\"muted\">מספר מסמך: {{ $json.InvoiceNumber }} &middot; תאריך: {{ new Date().toLocaleDateString('he-IL') }}</div>\n<div class=\"muted\">לקוח: {{ $json.CustomerId }}</div>\n<table>\n<tr><th>תיאור</th><th>סכום</th></tr>\n<tr><td>סכום לפני מע\"מ</td><td>{{ $json.Amount }} &#8362;</td></tr>\n<tr><td>מע\"מ 18%</td><td>{{ $json.VatAmount }} &#8362;</td></tr>\n<tr class=\"total\"><td>סה\"כ לתשלום</td><td>{{ $json.Total }} &#8362;</td></tr>\n</table>\n<div class=\"foot\">מסמך זה הופק אוטומטית. עוסק מורשה 000000000.</div>\n</body></html>",
+              "type": "string"
+            },
+            {
+              "id": "c8b55d64-d4cf-4c97-8d60-e86575820161",
+              "name": "fileName",
+              "value": "=invoice-{{ $json.InvoiceNumber || $json.id }}.html",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9cfde59c-5113-46b3-b2dd-3fc84f2a45d0",
+      "name": "To File",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        200
+      ],
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "={{ $json.fileName }}",
+          "mimeType": "text/html",
+          "encoding": "utf8"
+        }
+      }
+    },
+    {
+      "id": "60982bd4-1d22-4506-b318-22c0c0d4477c",
+      "name": "Upload to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        880,
+        200
+      ],
+      "parameters": {
+        "name": "={{ $('Build HTML').item.json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "root",
+          "mode": "list",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "2aa50130-4f6b-48ec-b313-68c2a7228a2c",
+      "name": "Save Link",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        120
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9kzPR67OdT2La1",
+          "mode": "id",
+          "cachedResultName": "Invoices"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "id"
+          ],
+          "value": {
+            "id": "={{ $('Find Pending').item.json.id }}",
+            "PdfUrl": "={{ $json.webViewLink }}",
+            "Status": "הופקה"
+          }
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "bde0c6d0-6214-4dff-891c-4f3e67d60a18",
+      "name": "Mark Failed",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        300
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9kzPR67OdT2La1",
+          "mode": "id",
+          "cachedResultName": "Invoices"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "id"
+          ],
+          "value": {
+            "id": "={{ $('Find Pending').item.json.id }}",
+            "Status": "הפקה נכשלה"
+          }
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Every Minute": {
+      "main": [
+        [
+          {
+            "node": "Find Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Pending": {
+      "main": [
+        [
+          {
+            "node": "Build HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML": {
+      "main": [
+        [
+          {
+            "node": "To File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "To File": {
+      "main": [
+        [
+          {
+            "node": "Upload to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Drive": {
+      "main": [
+        [
+          {
+            "node": "Save Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

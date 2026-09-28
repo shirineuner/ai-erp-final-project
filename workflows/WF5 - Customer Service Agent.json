@@ -1,0 +1,299 @@
+{
+  "name": "WF5 - Customer Service Agent",
+  "nodes": [
+    {
+      "id": "250a56f7-aa0d-49a0-9483-10661848a406",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -180
+      ],
+      "parameters": {
+        "content": "WF5 — סוכן שירות לקוחות\n\nבוט טלגרם ללקוחות, מעוגן ב-RAG.\nשולף ממאגרי mypolicies ו-theproducts שמוזנים ב-WF6 ו-WF7.\n\nצריך: credential של טלגרם (בוט הלקוחות) ושל OpenAI.\nחשוב: להריץ את WF6 ו-WF7 לפני, אחרת המאגרים ריקים.",
+        "height": 220,
+        "width": 480,
+        "color": 5
+      }
+    },
+    {
+      "id": "55481c8f-c7d2-4ab6-96e4-6c4586785846",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "webhookId": "f6a2c84e-47de-4c35-b693-68ec06495dd3"
+    },
+    {
+      "id": "9ff79eaa-310a-4f11-8b04-698adc39b18d",
+      "name": "Customer Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        280,
+        200
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "אתה נציג שירות לקוחות של חנות אלקטרוניקה ישראלית. ענה בעברית, בקצרה ובאדיבות.\n\nכללים:\n- ענה אך ורק על סמך המידע שחוזר מהכלים policies ו-products. אל תמציא.\n- שאלה על מדיניות (החזרות, אחריות, משלוחים, תשלומים, חשבוניות) — השתמש ב-policies.\n- שאלה על מוצר, מחיר או זמינות — השתמש ב-products.\n- אם המידע לא נמצא בכלים, אמור שאין לך את התשובה והצע לפנות לנציג אנושי.\n- אל תיתן ייעוץ משפטי או מס, ואל תבטיח הנחות או חריגות ממדיניות.\n- מחירים בשקלים, כולל מע\"מ."
+        }
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "7f76b584-d27e-4b4d-aefa-688ca3b865b5",
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        440
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4c54769d-590f-46e1-acd0-bbbbcdd53fe1",
+      "name": "Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        280,
+        440
+      ],
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 10
+      }
+    },
+    {
+      "id": "f9273604-6965-483f-b534-052a2a1737e8",
+      "name": "Policies",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        440,
+        440
+      ],
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "policies",
+        "toolDescription": "מדיניות העסק: החזרות, אחריות, משלוחים, תשלומים, חשבוניות מס, שעות פעילות וטון שיחה.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "mypolicies",
+          "mode": "list",
+          "cachedResultName": "mypolicies"
+        },
+        "topK": 4
+      }
+    },
+    {
+      "id": "d0425a08-b748-4fe3-9e85-ba5f6a2c454b",
+      "name": "Embeddings Policies",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        640
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "2fed2411-b5d5-4565-8211-7d6156b9899a",
+      "name": "Products",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        440
+      ],
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "products",
+        "toolDescription": "קטלוג המוצרים והשירותים: שם, קטגוריה, מחיר, מפרט וזמינות במלאי.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "theproducts",
+          "mode": "list",
+          "cachedResultName": "theproducts"
+        },
+        "topK": 4
+      }
+    },
+    {
+      "id": "a3549bfb-c436-463e-b7fa-c535a63fcf67",
+      "name": "Embeddings Products",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        640
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "0d8484ab-4529-4b10-90ac-49afdc14065c",
+      "name": "Send Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        580,
+        180
+      ],
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "retryOnFail": true
+    },
+    {
+      "id": "4ac7fc68-9902-4645-a0dc-8a2b61429084",
+      "name": "Send Error",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        580,
+        320
+      ],
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "סליחה, קרתה תקלה זמנית. אפשר לנסות שוב בעוד רגע.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Customer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Customer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Customer Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Policies": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Products": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Policies": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Policies",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Products": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Products",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

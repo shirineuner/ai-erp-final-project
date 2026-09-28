@@ -1,0 +1,243 @@
+{
+  "name": "WF1 - Tax Doc Validation",
+  "nodes": [
+    {
+      "id": "bab54820-c1f9-4a67-966b-98a947a4e994",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        -140
+      ],
+      "parameters": {
+        "content": "WF1 — אימות מסמכי מס\n\nטריגר: חשבונית חדשה ב-Airtable (לפי שדה Created).\nמחשב מע\"מ 18% וסכום כולל, ומסמן Status = ממתין להפקה.\n\nצריך: credential של Airtable.\nטיפול בשגיאה: עדכון שנכשל יוצא לענף השגיאה.",
+        "height": 220,
+        "width": 480,
+        "color": 5
+      }
+    },
+    {
+      "id": "b24d6e10-de9f-4eef-9eb8-37edf096a526",
+      "name": "New Invoice",
+      "type": "n8n-nodes-base.airtableTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        180
+      ],
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "baseId": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "tableId": {
+          "__rl": true,
+          "value": "tbl9kzPR67OdT2La1",
+          "mode": "id",
+          "cachedResultName": "Invoices"
+        },
+        "triggerField": "Created",
+        "additionalFields": {}
+      }
+    },
+    {
+      "id": "617a7b23-7780-400f-b021-3ed847cc6a9f",
+      "name": "Needs VAT?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ed6a8b7b-8413-41c2-8c9c-0f19d4bed2f4",
+              "leftValue": "={{ $json.fields.Amount }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b0ef0497-2596-4af7-9c50-aa1a5af3931c",
+              "leftValue": "={{ $json.fields.Total }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d2f01a4c-0c1c-488f-b60d-dbfeaa910f94",
+      "name": "Calculate VAT",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        80
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5ef497fd-71ac-4df7-af58-c530f91e3f7a",
+              "name": "recordId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "7f7689aa-a7e6-4d1a-a61c-5557f2e6d4f0",
+              "name": "VatAmount",
+              "value": "={{ Math.round($json.fields.Amount * 0.18 * 100) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "13b98996-a2f9-431b-a3f9-9a3a773e0407",
+              "name": "Total",
+              "value": "={{ Math.round($json.fields.Amount * 1.18 * 100) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "75d812d9-e727-4a07-bd2a-89b00fa55ae0",
+              "name": "Status",
+              "value": "ממתין להפקה",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8dee45bb-4406-446a-a994-f5d9b150a608",
+      "name": "Update Invoice",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        80
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9kzPR67OdT2La1",
+          "mode": "id",
+          "cachedResultName": "Invoices"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "id"
+          ],
+          "value": {
+            "id": "={{ $json.recordId }}",
+            "VatAmount": "={{ $json.VatAmount }}",
+            "Total": "={{ $json.fields.Total }}",
+            "Status": "={{ $json.Status }}"
+          }
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "d7f0f334-97f2-45a2-9590-8f5330e43c9a",
+      "name": "Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        960,
+        220
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "New Invoice": {
+      "main": [
+        [
+          {
+            "node": "Needs VAT?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs VAT?": {
+      "main": [
+        [
+          {
+            "node": "Calculate VAT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate VAT": {
+      "main": [
+        [
+          {
+            "node": "Update Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Invoice": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

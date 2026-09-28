@@ -1,0 +1,296 @@
+{
+  "name": "WF9 - Manager Agent",
+  "nodes": [
+    {
+      "id": "15fc1b1e-6089-4cbe-a980-b97a6855106d",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -200
+      ],
+      "parameters": {
+        "content": "WF9 — סוכן המנהל\n\nבוט טלגרם לבעלים בלבד. עונה על שאלות אנליטיקה.\nהמספרים מחושבים בצומת Summarize — הסוכן רק מנסח.\n\n⚠️ חובה: להחליף 7795748357 בצומת \"Is Owner?\"\nב-Chat ID שלך בטלגרם.\n\nצריך: credentials של טלגרם (בוט המנהל), Airtable, OpenAI.",
+        "height": 220,
+        "width": 480,
+        "color": 5
+      }
+    },
+    {
+      "id": "27bbfac8-0589-4668-9cd3-75a61259558c",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "webhookId": "12f85c81-bfce-48d5-a6b9-e057ef8678bf"
+    },
+    {
+      "id": "5fbbd74f-dba2-43ee-a5ca-f1db7a92c8a5",
+      "name": "Is Owner?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "405400f7-d394-426f-b48b-0c82dd3328db",
+              "leftValue": "={{ $json.message.chat.id }}",
+              "rightValue": "7795748357",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "singleValue": false
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "85c8c41d-cc48-4821-bd03-38ccd06dd884",
+      "name": "Get Invoices",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        460,
+        120
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9kzPR67OdT2La1",
+          "mode": "id",
+          "cachedResultName": "Invoices"
+        },
+        "returnAll": false,
+        "limit": 100,
+        "options": {}
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "84f8ae36-0d99-4746-a471-43cca64a8736",
+      "name": "Summarize",
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        120
+      ],
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "sum",
+              "field": "Total"
+            },
+            {
+              "aggregation": "count",
+              "field": "InvoiceNumber"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9ae1a31f-a2bb-4ee4-ab9a-e9026e90b54d",
+      "name": "Write Answer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        900,
+        120
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=אתה עוזר אנליטיקה של בעל עסק. נסח תשובה קצרה בעברית, במשפט או שניים, על סמך הנתונים בלבד. אל תמציא מספרים.\n\nשאלת הבעלים: {{ $('Telegram Trigger').item.json.message.text }}\n\nנתונים מתוך טבלת החשבוניות (עד 100 רשומות אחרונות):\nסך כל ההכנסות: {{ $json.sum_Total }} ש\"ח\nמספר חשבוניות: {{ $json.count_InvoiceNumber }}\n",
+        "messages": {},
+        "batching": {}
+      }
+    },
+    {
+      "id": "b23e2c37-ae86-4fc4-81a2-a56c0a8616cd",
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        340
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7ab12b19-6547-4d00-9434-9f1148bb8fd2",
+      "name": "Send Answer",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1140,
+        120
+      ],
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "retryOnFail": true
+    },
+    {
+      "id": "b7f7817b-ad44-4991-bb86-47c96f8c63ae",
+      "name": "Deny",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        360
+      ],
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "הבוט הזה זמין לבעל העסק בלבד.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      }
+    },
+    {
+      "id": "58ab6af1-75e3-4f29-8109-6c26fc6aa086",
+      "name": "Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Owner?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Owner?": {
+      "main": [
+        [
+          {
+            "node": "Get Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Deny",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Invoices": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Write Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Answer": {
+      "main": [
+        [
+          {
+            "node": "Send Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Answer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

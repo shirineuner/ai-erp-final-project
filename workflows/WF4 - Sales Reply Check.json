@@ -1,0 +1,236 @@
+{
+  "name": "WF4 - Sales Reply Check",
+  "nodes": [
+    {
+      "id": "bb36f61b-efd7-4f07-bcda-fac80fb56eb5",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -100
+      ],
+      "parameters": {
+        "content": "WF4 — בדיקת תשובות למיילים הקרים\n\nכל 30 דקות בודק מיילים שלא נקראו ב-Gmail,\nמחלץ את כתובת השולח ומעדכן את הליד ל-Status = Replied.\n\nצריך: credentials של Gmail ושל Airtable.\n\nשים לב: Gmail מחזיר את השולח כמחרוזת \"שם <כתובת>\"\nבשדה From, ולכן הנוסחה שולפת את מה שבין הסוגריים.\nב-Find Lead מודלק Always Output Data — בלעדיו\nחיפוש בלי התאמה עוצר את הזרימה בשקט.",
+        "height": 200,
+        "width": 460,
+        "color": 5
+      }
+    },
+    {
+      "id": "16b08992-cea8-41e7-8471-85a6959a73ca",
+      "name": "Every 30 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        160
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "040a22b4-8436-4af1-8856-faa725e7d8e9",
+      "name": "Get Unread Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        160
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 20,
+        "simple": true,
+        "filters": {
+          "q": "is:unread newer_than:1d"
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "2e679455-2c11-4480-ae23-7b75d7c1a441",
+      "name": "Find Lead",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        160
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBy2R0JR4LieJ8F",
+          "mode": "id",
+          "cachedResultName": "Leads"
+        },
+        "filterByFormula": "={Email} = \"{{ $json.From.match(/<(.+)>/)?.[1] ?? $json.From }}\"",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "9cd75724-6e0c-49d3-a111-fbf2fad98cb5",
+      "name": "Lead Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        160
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9e26fa57-2890-4ffc-98fa-83fc249f41a0",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e12319d9-bdfa-49d9-83ea-c477407f5a9c",
+      "name": "Mark Replied",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        60
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBy2R0JR4LieJ8F",
+          "mode": "id",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "id"
+          ],
+          "value": {
+            "id": "={{ $json.id }}",
+            "Status": "Replied"
+          }
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "dcb5c713-a57d-440d-9895-2938d5a26425",
+      "name": "No Match",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        960,
+        260
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Every 30 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Get Unread Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Unread Emails": {
+      "main": [
+        [
+          {
+            "node": "Find Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Lead": {
+      "main": [
+        [
+          {
+            "node": "Lead Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Found?": {
+      "main": [
+        [
+          {
+            "node": "Mark Replied",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

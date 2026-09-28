@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-ERP · החנות האלקטרונית של פיסטוק</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#0f766e; --teal-soft:#ccfbf1; --teal-deep:#134e4a;
+  --ink:#14201f; --muted:#5b6b69; --line:#dde5e3;
+  --bg:#f6f8f8; --card:#ffffff; --amber:#b45309; --amber-soft:#fef3c7;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'Assistant',-apple-system,'Segoe UI',system-ui,sans-serif;
+  font-size:17px; line-height:1.75;
+}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px 80px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace}
+
+/* hero */
+.hero{
+  background:linear-gradient(160deg,var(--teal-deep),var(--teal));
+  color:#fff;text-align:center;padding:64px 24px 56px;margin-bottom:48px;
+}
+.hero .bolt{font-size:38px;line-height:1}
+.hero h1{margin:14px 0 6px;font-size:40px;font-weight:700;letter-spacing:-.5px}
+.hero .sub{font-size:21px;font-weight:300;opacity:.92;margin:0 0 26px}
+.stats{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:26px}
+.stat{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+  border-radius:999px;padding:7px 18px;font-size:15px;font-weight:600}
+.stack{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-bottom:28px}
+.chip{background:rgba(0,0,0,.18);border-radius:6px;padding:4px 11px;font-size:13px}
+.byline{font-size:14px;opacity:.82;line-height:1.9}
+.byline b{font-weight:700;opacity:1}
+
+/* sections */
+h2{font-size:27px;margin:56px 0 18px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+h3{font-size:19px;margin:0 0 8px}
+p{margin:0 0 16px}
+.lead{font-size:19px;color:var(--muted)}
+
+/* journey */
+.journey{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:10px 4px;margin:24px 0}
+.step{display:flex;gap:14px;align-items:baseline;padding:11px 20px;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.step .when{flex:0 0 132px;font-weight:700;color:var(--teal)}
+.step .what{color:var(--muted)}
+.punch{text-align:center;font-size:20px;font-weight:600;color:var(--teal-deep);margin:22px 0 0}
+
+/* architecture */
+.arch{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px}
+.box{border:2px solid var(--teal);border-radius:10px;padding:12px 16px;text-align:center;background:var(--teal-soft)}
+.box .t{font-weight:700}
+.box .s{font-size:14px;color:var(--muted)}
+.arrow{text-align:center;color:var(--muted);font-size:13px;padding:8px 0;line-height:1.3}
+.engine{border:2px solid var(--teal-deep);border-radius:12px;padding:18px;background:#fff}
+.engine h4{margin:0 0 14px;text-align:center;font-size:17px;letter-spacing:.5px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px}
+.wf{display:flex;gap:9px;font-size:15px}
+.wf b{color:var(--teal);flex:0 0 42px}
+.errbar{margin-top:14px;padding:9px 14px;border-radius:8px;background:var(--amber-soft);
+  color:var(--amber);font-size:15px;font-weight:600;text-align:center}
+.services{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:4px}
+.svc{border:1px solid var(--line);border-radius:9px;padding:10px;text-align:center;background:#fafcfc}
+.svc .n{font-weight:600;font-size:15px}
+.svc .d{font-size:13px;color:var(--muted)}
+
+/* agents */
+.agents{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.agent{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--teal);
+  border-radius:12px;padding:20px}
+.agent .tag{font-size:13px;color:var(--teal);font-weight:600;margin-bottom:10px}
+.agent p{font-size:15px;color:var(--muted);margin:0 0 12px}
+.agent .note{font-size:14px;color:var(--teal-deep);background:var(--teal-soft);
+  border-radius:7px;padding:8px 11px;margin:0}
+
+/* tables */
+table{width:100%;border-collapse:collapse;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:15px}
+th{background:var(--teal-deep);color:#fff;text-align:right;padding:11px 14px;font-weight:600}
+td{padding:10px 14px;border-top:1px solid var(--line);vertical-align:top}
+tr:nth-child(even) td{background:#fbfdfd}
+td.id{font-weight:700;color:var(--teal);white-space:nowrap}
+td .en{font-weight:600}
+.fields{font-size:13px;color:var(--muted)}
+.footnote{font-size:14px;color:var(--muted);margin-top:10px}
+
+/* callout */
+.callout{border-right:4px solid var(--amber);background:var(--amber-soft);
+  border-radius:0 10px 10px 0;padding:14px 18px;margin:20px 0;font-size:15px}
+.layers{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.layer{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+.layer h3{color:var(--teal)}
+.layer p{font-size:15px;color:var(--muted);margin:0}
+
+/* tree + steps */
+pre.tree{background:#10201f;color:#c9e7e3;border-radius:12px;padding:20px;overflow-x:auto;
+  direction:ltr;text-align:left;font-size:14px;line-height:1.7;margin:20px 0}
+ol.run{counter-reset:s;list-style:none;padding:0;margin:20px 0}
+ol.run li{counter-increment:s;background:var(--card);border:1px solid var(--line);
+  border-radius:10px;padding:13px 18px 13px 18px;margin-bottom:9px;display:flex;gap:14px;align-items:baseline}
+ol.run li::before{content:counter(s);flex:0 0 28px;height:28px;line-height:28px;text-align:center;
+  background:var(--teal);color:#fff;border-radius:50%;font-weight:700;font-size:14px}
+
+.app-link{display:inline-block;background:var(--teal);color:#fff;text-decoration:none;
+  padding:11px 24px;border-radius:9px;font-weight:600;margin:6px 0 16px}
+.app-link:hover{background:var(--teal-deep)}
+footer{text-align:center;color:var(--muted);font-size:14px;margin-top:60px;
+  padding-top:24px;border-top:1px solid var(--line)}
+
+@media (max-width:760px){
+  .agents,.layers,.grid,.services{grid-template-columns:1fr}
+  .hero h1{font-size:30px}
+  .step{flex-direction:column;gap:2px}
+  .step .when{flex:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="bolt">⚡</div>
+  <h1>AI-ERP · החנות האלקטרונית של פיסטוק</h1>
+  <p class="sub">מערכת ניהול עסקית שמנהלת את עצמה</p>
+  <div class="stats">
+    <span class="stat">11 אוטומציות</span>
+    <span class="stat">3 סוכני AI</span>
+    <span class="stat">2 מאגרי RAG</span>
+    <span class="stat">ללא שורת קוד אחת</span>
+  </div>
+  <div class="stack">
+    <span class="chip">n8n Cloud</span><span class="chip">Airtable</span>
+    <span class="chip">OpenAI</span><span class="chip">Lovable</span>
+    <span class="chip">Telegram</span><span class="chip">Gmail</span>
+    <span class="chip">Google Drive</span>
+  </div>
+  <div class="byline">
+    פרויקט גמר · קורס סוכני AI ואוטומציות · ג'ון ברייס<br>
+    <b>שירי נוינר רוזנפלד</b> · מנחה: תומר פוקס
+  </div>
+</div>
+
+<div class="wrap">
+
+<h2>הבעיה</h2>
+<p class="lead">עסק קמעונאי קטן מאבד לידים כי אין מי שיחזור אליהם, עונה לאותן חמש שאלות עשר פעמים ביום, ומפיק חשבוניות ידנית בסוף כל יום. שלוש עבודות שלמות שאף אחד לא רוצה לעשות.</p>
+
+<h2>הפתרון</h2>
+<p>מערכת אחת שרצה ברקע ומטפלת בכל השלוש.</p>
+
+<div class="journey">
+  <div class="step"><span class="when">ליד נכנס</span><span class="what">נבדק מול המאגר, נשמר, והבעלים מקבלת התראה</span></div>
+  <div class="step"><span class="when">אחרי שעות ספורות</span><span class="what">סוכן AI כותב לו מייל אישי ושולח</span></div>
+  <div class="step"><span class="when">כשהוא עונה</span><span class="what">המערכת מזהה ומעדכנת את הסטטוס לבד</span></div>
+  <div class="step"><span class="when">שאלה בטלגרם</span><span class="what">סוכן שירות עונה מתוך מסמכי המדיניות והקטלוג</span></div>
+  <div class="step"><span class="when">נוצרת חשבונית</span><span class="what">מע"מ מחושב, מסמך ממותג מופק, נשמר בדרייב, והקישור חוזר לטבלה</span></div>
+  <div class="step"><span class="when">"מה ההכנסות?"</span><span class="what">סוכן המנהל עונה מהנתונים החיים</span></div>
+</div>
+<p class="punch">בלי אף לחיצה ידנית.</p>
+
+<h2>ארכיטקטורה</h2>
+<div class="arch">
+  <div class="box"><div class="t">אפליקציית Lovable</div><div class="s">ממשק ניהול בדפדפן</div></div>
+  <div class="arrow">▼<br>POST · webhook מאובטח</div>
+  <div class="engine">
+    <h4>n8n Cloud</h4>
+    <div class="grid">
+      <div class="wf"><b>WF1</b> אימות מסמכי מס</div>
+      <div class="wf"><b>WF6</b> הטמעת מדיניות</div>
+      <div class="wf"><b>WF2</b> קליטת לידים</div>
+      <div class="wf"><b>WF7</b> הטמעת מוצרים</div>
+      <div class="wf"><b>WF3</b> מיילים יזומים</div>
+      <div class="wf"><b>WF8</b> הפקת חשבונית</div>
+      <div class="wf"><b>WF4</b> זיהוי מענה</div>
+      <div class="wf"><b>WF9</b> סוכן מנהל</div>
+      <div class="wf"><b>WF5</b> סוכן שירות לקוחות</div>
+      <div class="wf"><b>WF13</b> API לאפליקציה</div>
+    </div>
+    <div class="errbar">⚠ WF0 · טיפול מרכזי בשגיאות — מחובר לכולן</div>
+  </div>
+  <div class="arrow">▼</div>
+  <div class="services">
+    <div class="svc"><div class="n">Airtable</div><div class="d">4 טבלאות</div></div>
+    <div class="svc"><div class="n">Gmail</div><div class="d">מיילים נכנסים ויוצאים</div></div>
+    <div class="svc"><div class="n">Telegram</div><div class="d">2 בוטים</div></div>
+    <div class="svc"><div class="n">Google Drive</div><div class="d">קבצי חשבונית</div></div>
+  </div>
+</div>
+
+<h2>שלושת הסוכנים</h2>
+<div class="agents">
+  <div class="agent">
+    <h3>💬 סוכן שירות לקוחות</h3>
+    <div class="tag">WF5 · בוט טלגרם פתוח</div>
+    <p>עונה ללקוחות על מדיניות, אחריות, משלוחים ומוצרים. מחזיק זיכרון שיחה ושני כלי חיפוש וקטוריים.</p>
+    <p class="note">עונה רק ממה שיש במאגר. לא ממציא מלאי ולא ממציא מחירים.</p>
+  </div>
+  <div class="agent">
+    <h3>📊 סוכן מנהל</h3>
+    <div class="tag">WF9 · בוט טלגרם פרטי</div>
+    <p>מסכם הכנסות, מספר חשבוניות ומגמות מתוך הנתונים החיים של העסק.</p>
+    <p class="note">נעול ל-Chat ID של בעלת העסק. כל פנייה אחרת נדחית.</p>
+  </div>
+  <div class="agent">
+    <h3>🖥️ סוכן האפליקציה</h3>
+    <div class="tag">WF13 · צ'אט בדפדפן</div>
+    <p>עונה על שאלות מתוך ממשק הניהול, עם גישה לאותם נתוני Airtable.</p>
+    <p class="note">כל הפניות עוברות דרך שרת. הטוקן לא מגיע לדפדפן.</p>
+  </div>
+</div>
+
+<h2>האוטומציות</h2>
+<table>
+  <tr><th>#</th><th>שם</th><th>טריגר</th><th>מה היא עושה</th></tr>
+  <tr><td class="id">WF0</td><td class="en">Error Handler</td><td>Error Trigger</td><td>מקבלת כשלים מכל האוטומציות ושולחת התראה מפורטת בטלגרם</td></tr>
+  <tr><td class="id">WF1</td><td class="en">Tax Doc Validation</td><td>Airtable Trigger</td><td>מזהה חשבונית חדשה, מחשבת מע"מ 18% וסך הכל, מעדכנת סטטוס</td></tr>
+  <tr><td class="id">WF2</td><td class="en">Lead Intake</td><td>Webhook</td><td>קולטת ליד חיצוני, מסננת כפילויות לפי אימייל, מתריעה לבעלים</td></tr>
+  <tr><td class="id">WF3</td><td class="en">Sales Cold Emails</td><td>כל 3 שעות</td><td>כותבת מייל מכירות אישי ב-LLM ושולחת לליד בסטטוס New</td></tr>
+  <tr><td class="id">WF4</td><td class="en">Sales Reply Check</td><td>כל 30 דקות</td><td>סורקת את תיבת הדואר, מזהה מענה מליד, מעדכנת ל-Replied</td></tr>
+  <tr><td class="id">WF5</td><td class="en">Customer Service Agent</td><td>Telegram</td><td>סוכן שירות עם RAG על המדיניות ועל הקטלוג</td></tr>
+  <tr><td class="id">WF6</td><td class="en">Policies Embedding</td><td>Form</td><td>טוען את מסמכי המדיניות למאגר <code>mypolicies</code></td></tr>
+  <tr><td class="id">WF7</td><td class="en">Products Embedding</td><td>Form</td><td>טוען את קטלוג המוצרים למאגר <code>theproducts</code></td></tr>
+  <tr><td class="id">WF8</td><td class="en">Invoice Document</td><td>Schedule</td><td>בונה חשבונית HTML ממותגת, מעלה לדרייב, שומר קישור ב-Airtable</td></tr>
+  <tr><td class="id">WF9</td><td class="en">Manager Agent</td><td>Telegram</td><td>סוכן מנהל, זמין לבעלת העסק בלבד</td></tr>
+  <tr><td class="id">WF13</td><td class="en">App Webhook</td><td>Webhook</td><td>שכבת ה-API של אפליקציית הניהול</td></tr>
+</table>
+<p class="footnote">המספור תואם את מסמך הדרישות. המספרים 10–12 אינם קיימים בו.</p>
+
+<h2>בסיס הנתונים</h2>
+<p>בסיס <b>ERP-AI</b> ב-Airtable, ארבע טבלאות:</p>
+<table>
+  <tr><th>טבלה</th><th>תפקיד</th><th>שדות עיקריים</th></tr>
+  <tr><td class="en">Invoices</td><td>חשבוניות מס</td><td class="fields">InvoiceNumber · CustomerName · Amount · VatAmount · Total · Status · PdfUrl</td></tr>
+  <tr><td class="en">Leads</td><td>לידים ולקוחות פוטנציאליים</td><td class="fields">Name · Email · Phone · Company · Status</td></tr>
+  <tr><td class="en">Products</td><td>קטלוג — 34 פריטים</td><td class="fields">Name · SKU · Category · Price · Stock · Description</td></tr>
+  <tr><td class="en">Tasks</td><td>משימות פנימיות</td><td class="fields">Title · Owner · DueDate · Status</td></tr>
+</table>
+
+<h2>RAG</h2>
+<p>שני מאגרים וקטוריים, embeddings של <code>text-embedding-3-small</code>:</p>
+<p><b>mypolicies</b> — 12 מסמכי מדיניות: החזרות, אחריות, משלוחים, תמחור, תשלומים, כללי חשבונית מס בישראל, גבולות הסוכן, טון שירות, פלייבוק מכירות, תדריך מנהל, סקירת העסק ושאלות נפוצות. מפוצלים ל-<b>78 מקטעים</b> באמצעות Recursive Character Text Splitter.</p>
+<p><b>theproducts</b> — קטלוג 34 המוצרים.</p>
+<div class="callout">⚠️ המאגרים יושבים בזיכרון. אחרי הפעלה מחדש של n8n יש להריץ שוב את WF6 ו-WF7, אחרת הסוכן יענה שאין לו מידע.</div>
+
+<h2>אפליקציית הניהול</h2>
+<a class="app-link" href="https://clear-thoughts-builder.lovable.app">clear-thoughts-builder.lovable.app ←</a>
+<p>לוח מחוונים עם סיכום הכנסות וגרף לידים לפי סטטוס · חשבוניות · לידים · מוצרים · משימות · צ'אט מול הסוכן.</p>
+<h3>🔒 אבטחה</h3>
+<p>ה-Personal Access Token של Airtable <b>לא נמצא באפליקציה</b>. כל פנייה עוברת דרך פונקציית שרת אל ה-webhook של WF13, וכתובת ה-webhook שמורה כ-secret בצד השרת בלבד ואינה מגיעה לדפדפן. בדיקת האימות המלאה נמצאת ב-<code>docs/security-check.md</code>.</p>
+
+<h2>טיפול בשגיאות — שתי שכבות</h2>
+<div class="layers">
+  <div class="layer">
+    <h3>ברמת הצומת</h3>
+    <p>בכל אוטומציה, צמתים קריטיים מוגדרים <code>Continue (using error output)</code> עם ניסיון חוזר, ומנותבים לענף Error ייעודי. כשלון נקודתי לא מפיל את הזרימה כולה.</p>
+  </div>
+  <div class="layer">
+    <h3>ברמת האוטומציה</h3>
+    <p>WF0 מוגדר כ-Error Workflow בכל אחת מהאוטומציות. כשהרצת production נכשלת, n8n מפעיל אותו אוטומטית והוא שולח לטלגרם את שם האוטומציה, הצומת שנכשל, הודעת השגיאה המקורית וקישור ישיר להרצה.</p>
+  </div>
+</div>
+<p class="footnote">הוכחה: <code>Screen shots/FailAutomatioError_Managerbot_280926.jpg</code></p>
+
+<h2>מבנה התיקיות</h2>
+<pre class="tree">Project Final/
+├── README.md         ← גרסת Markdown
+├── README.html       ← הדף הזה
+├── workflows/        ← קובצי JSON של האוטומציות, מוכנים לייבוא
+├── n8n/              ← קובצי המקור של המנחה, ללא שינוי
+├── policies/         ← מסמכי המדיניות שהוזנו ל-RAG
+├── products/         ← קטלוג המוצרים
+├── templates/        ← תבנית החשבונית + דוגמת פלט
+├── app/              ← תיעוד אפליקציית Lovable
+├── docs/             ← בדיקת האבטחה
+├── Screen shots/     ← צילומי מסך מהמערכת הפועלת
+└── Documents/        ← מסמך הדרישות</pre>
+
+<h2>הפעלה מאפס</h2>
+<ol class="run">
+  <li>ייבוא קובצי ה-JSON מתיקיית <code>workflows</code> ל-n8n Cloud</li>
+  <li>חיבור credentials — Airtable · OpenAI · Gmail · Google Drive · שני בוטי טלגרם</li>
+  <li>הרצה חד-פעמית של WF6 ו-WF7 לטעינת המאגרים הוקטוריים</li>
+  <li>בהגדרות כל אוטומציה — בחירת WF0 בשדה Error Workflow</li>
+  <li>Publish</li>
+</ol>
+
+<footer>נבנה ללא קוד · ספטמבר 2026</footer>
+
+</div>
+</body>
+</html>

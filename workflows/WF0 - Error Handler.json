@@ -1,0 +1,70 @@
+{
+  "name": "WF0 - Error Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "WF0 — טיפול מרכזי בשגיאות\n\nהאוטומציה הזו לא רצה לבד. מגדירים אותה\nב-Settings ← Error Workflow של כל שאר\nהאוטומציות. ברגע שצומת כלשהו נכשל,\nn8n מפעיל אותה אוטומטית ומעביר לה את\nפרטי הכשל.\n\nהיא שולחת התראה בטלגרם לבעלת העסק עם\nשם האוטומציה, הצומת שנכשל, הודעת\nהשגיאה וקישור ישיר להרצה שנכשלה.\n\nכך מתקיימת הדרישה: טיפול בשגיאה\nבכל אחת מהאוטומציות.",
+        "height": 340,
+        "width": 460,
+        "color": 3
+      },
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-160, -40]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [360, 140]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1000000-0000-4000-8000-000000000001",
+              "name": "alert",
+              "type": "string",
+              "value": "=🔴 תקלה במערכת ה-ERP\n\nאוטומציה: {{ $json.workflow.name }}\nצומת שנכשל: {{ $json.execution?.lastNodeExecuted || 'לא ידוע' }}\nזמן: {{ new Date().toLocaleString('he-IL') }}\n\nהשגיאה:\n{{ $json.execution?.error?.message || $json.trigger?.error?.message || 'ללא פירוט' }}\n\nקישור להרצה:\n{{ $json.execution?.url || 'לא זמין' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "Build Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [580, 140]
+    },
+    {
+      "parameters": {
+        "chatId": "7795748357",
+        "text": "={{ $json.alert }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000004",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [800, 140]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [[{ "node": "Build Alert", "type": "main", "index": 0 }]]
+    },
+    "Build Alert": {
+      "main": [[{ "node": "Alert Owner", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

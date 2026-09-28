@@ -1,0 +1,268 @@
+{
+  "name": "WF2 - Lead Intake",
+  "nodes": [
+    {
+      "id": "0a621de5-7afe-401e-b154-8d65b31bcef1",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -220
+      ],
+      "parameters": {
+        "content": "WF2 — קליטת לידים וסינון כפילויות\n\nנקודת כניסה: webhook. האפליקציה או טופס חיצוני\nשולחים POST עם { name, email, phone, company }.\n\nמחפש את המייל בטבלת Leads. אם לא קיים — יוצר ליד\nחדש בסטטוס New ושולח התראה לבעלים.\nאם קיים — לא עושה כלום (סינון כפילויות).\n\n⚠️ ב-Find Existing מודלק Always Output Data.\nבלעדיו חיפוש בלי התאמה עוצר את הזרימה בשקט,\nוליד חדש לעולם לא נוצר.",
+        "height": 300,
+        "width": 500,
+        "color": 5
+      }
+    },
+    {
+      "id": "4b32a357-a6f9-4645-a237-0856829080c8",
+      "name": "New Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-lead",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "38efd2a3-6d14-47bf-9b0a-d2e8800c1c02"
+    },
+    {
+      "id": "430757d3-da96-40a3-a14f-6e5cc5b0f5da",
+      "name": "Find Existing",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        220
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBy2R0JR4LieJ8F",
+          "mode": "id",
+          "cachedResultName": "Leads"
+        },
+        "filterByFormula": "={Email} = \"{{ $json.body.email }}\"",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "d5c9dab0-91d1-476e-9a49-c608f68e9c1c",
+      "name": "Is New?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b8e136ea-99ad-4bc6-8a9d-f6dce82c4aab",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7f9365f8-69ef-4f8e-8dd5-08c41a35d87c",
+      "name": "Create Lead",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        120
+      ],
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBy2R0JR4LieJ8F",
+          "mode": "id",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "value": {
+            "Name": "={{ $('New Lead Webhook').item.json.body.name }}",
+            "Email": "={{ $('New Lead Webhook').item.json.body.email }}",
+            "Phone": "={{ $('New Lead Webhook').item.json.body.phone }}",
+            "Company": "={{ $('New Lead Webhook').item.json.body.company }}",
+            "Status": "New"
+          }
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "b1f8021f-8355-4fcb-9cd6-e7dc4469c8d9",
+      "name": "Notify Owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        120
+      ],
+      "parameters": {
+        "sendTo": "shirinrtest@gmail.com",
+        "subject": "=ליד חדש נקלט: {{ $('New Lead Webhook').item.json.body.name }}",
+        "message": "=ליד חדש נכנס למערכת.\n\nשם: {{ $('New Lead Webhook').item.json.body.name }}\nאימייל: {{ $('New Lead Webhook').item.json.body.email }}\nטלפון: {{ $('New Lead Webhook').item.json.body.phone }}\nחברה: {{ $('New Lead Webhook').item.json.body.company }}\n\nהסטטוס נקבע ל-New. סוכן המכירות (WF3) יפנה אליו בהרצה הבאה.",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "549f8c73-d855-4ba1-ba0b-aae591a25572",
+      "name": "Duplicate",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        340
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4ff3b1ac-8c83-40a9-a4ff-b734457bb0bd",
+      "name": "Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        960,
+        340
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "New Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Find Existing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Existing": {
+      "main": [
+        [
+          {
+            "node": "Is New?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New?": {
+      "main": [
+        [
+          {
+            "node": "Create Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Lead": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Owner": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

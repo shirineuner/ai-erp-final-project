@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8"><title>חשבונית מס</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;direction:rtl;margin:0;padding:48px;color:#1a1a1a;background:#fff}
+.wrap{max-width:760px;margin:0 auto}
+.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a1a1a;padding-bottom:20px}
+.biz h2{margin:0 0 6px;font-size:20px}
+.biz div{font-size:13px;color:#555;line-height:1.7}
+.doc{text-align:left}
+.doc h1{margin:0 0 8px;font-size:28px;letter-spacing:1px}
+.doc div{font-size:13px;color:#555;line-height:1.8}
+.doc b{color:#1a1a1a}
+.cust{margin-top:28px;background:#f7f7f7;padding:14px 18px;border-radius:6px;font-size:14px}
+table{width:100%;border-collapse:collapse;margin-top:28px}
+th{background:#1a1a1a;color:#fff;padding:12px 14px;text-align:right;font-size:14px}
+td{border-bottom:1px solid #e5e5e5;padding:12px 14px;text-align:right;font-size:14px}
+td.num{width:180px;font-variant-numeric:tabular-nums}
+tr.total td{border-top:2px solid #1a1a1a;border-bottom:none;font-weight:bold;font-size:17px;padding-top:16px}
+.terms{margin-top:28px;font-size:13px;color:#555;line-height:1.8}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid #e5e5e5;font-size:11px;color:#888;text-align:center}
+</style></head><body><div class="wrap">
+<div class="head">
+  <div class="biz">
+    <h2>החנות האלקטרונית של פיסטוק</h2>
+    <div>
+      ח.פ / עוסק מורשה: 515-678-923<br>
+      רחוב הפיסטוק 52, תל אביב<br>
+      טלפון: 03-555-1234<br>
+      www.fistuk.co.il
+    </div>
+  </div>
+  <div class="doc">
+    <h1>חשבונית מס</h1>
+    <div>
+      מספר: <b>{{ $json.InvoiceNumber }}</b><br>
+      תאריך: <b>{{ new Date().toLocaleDateString('he-IL') }}</b>
+    </div>
+  </div>
+</div>
+
+<div class="cust">לכבוד: <b>{{ $json.CustomerId }}</b></div>
+
+<table>
+  <tr><th>תיאור</th><th>סכום</th></tr>
+  <tr><td>סכום לפני מע"מ</td><td class="num">{{ $json.Amount.toLocaleString('he-IL',{minimumFractionDigits:2}) }} &#8362;</td></tr>
+  <tr><td>מע"מ 18%</td><td class="num">{{ $json.VatAmount.toLocaleString('he-IL',{minimumFractionDigits:2}) }} &#8362;</td></tr>
+  <tr class="total"><td>סה"כ לתשלום</td><td class="num">{{ $json.Total.toLocaleString('he-IL',{minimumFractionDigits:2}) }} &#8362;</td></tr>
+</table>
+
+<div class="terms">
+  תנאי תשלום: שוטף + 30 ללקוחות עסקיים, בכפוף לאישור אשראי.<br>
+  לשאלות בנושא החשבונית: support@fistuk.co.il
+</div>
+
+<div class="foot">מסמך זה הופק אוטומטית על ידי מערכת ה-ERP של החנות האלקטרונית של פיסטוק.</div>
+</div></body></html>

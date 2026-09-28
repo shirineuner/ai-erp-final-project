@@ -1,0 +1,254 @@
+{
+  "name": "WF3 - Sales Cold Emails",
+  "nodes": [
+    {
+      "id": "f298bdb5-f662-4dbf-bada-41f6c9335a5f",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -220
+      ],
+      "parameters": {
+        "content": "WF3 — סוכן מכירות: מיילים קרים\n\nכל 3 שעות שולף ליד אחד בסטטוס New,\nמנסח לו מייל אישי בעברית ושולח אותו,\nואז מסמן אותו Contacted כדי שלא יקבל שוב.\n\n⚠️ ליד אחד בכל הרצה — במכוון. כך טעות\nלא שולחת עשרות מיילים (דרישה מהמסמך).\n\nהפרומפט אוסר במפורש על סוגריים מרובעים\nומכתיב חתימה קבועה — בלי זה המודל משאיר\n[שמך] ו-[טלפון] למילוי ידני.\n\nצריך: credentials של Airtable, OpenAI, Gmail.",
+        "height": 340,
+        "width": 500,
+        "color": 5
+      }
+    },
+    {
+      "id": "e96562ed-ae60-49cc-a4fb-6da7b4aa1b74",
+      "name": "Every 3 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f6238255-fc03-438d-9ad9-be81693582be",
+      "name": "Search New Leads",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        220
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBy2R0JR4LieJ8F",
+          "mode": "id",
+          "cachedResultName": "Leads"
+        },
+        "filterByFormula": "AND({Status} = \"New\", {Email} != \"\")",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "f69e2f23-b849-4306-abcc-34065d3c7e01",
+      "name": "Write Cold Email",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        480,
+        220
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=כתוב מייל מכירות קצר וידידותי בעברית לליד עסקי.\n\nפרטי הליד:\nשם: {{ $json.Name }}\nחברה: {{ $json.Company || 'לא ידוע' }}\n\nאנחנו \"החנות האלקטרונית של פיסטוק\" — קמעונאי אלקטרוניקה ישראלי. מוכרים רק מוצרים מקוריים עם אחריות יבואן רשמי, ומציעים ללקוחות עסקיים מחירי כמות, חשבונית מס ותנאי אשראי.\n\nכללים:\n- עד 120 מילים\n- פנייה אישית בשם\n- שלוש פסקאות קצרות: פנייה, מה אנחנו מציעים, קריאה לפעולה\n- בלי הבטחות על מחירים או הנחות ספציפיות\n- אסור להשתמש בסוגריים מרובעים ואסור להשאיר מצייני מקום למילוי\n- החזר HTML בלבד: כל פסקה עטופה ב-<p>, בלי <html> ובלי <body>\n- בלי שורת נושא ובלי הסברים\n\nסיים בפסקה האחרונה עם החתימה הזו בדיוק, עם <br> בין השורות:\n\n<p>בברכה,<br>שירי<br>החנות האלקטרונית של פיסטוק<br>03-555-1234 | support@fistuk.co.il</p>\n",
+        "messages": {},
+        "batching": {}
+      },
+      "retryOnFail": true
+    },
+    {
+      "id": "e68bd3dc-0249-4aba-81b0-f05a8c45afe6",
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        440
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "34c99c7b-f920-4853-8a5b-481f5d475163",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        760,
+        220
+      ],
+      "parameters": {
+        "sendTo": "={{ $('Search New Leads').item.json.Email }}",
+        "subject": "הצעה ללקוחות עסקיים — החנות האלקטרונית של פיסטוק",
+        "message": "={{ $json.text }}",
+        "options": {
+          "appendAttribution": false
+        },
+        "emailType": "html"
+      },
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "4ab4c2d0-4496-4283-a40a-b582d41e207f",
+      "name": "Mark Contacted",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1000,
+        120
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appL5kkYECyBzkHs2",
+          "mode": "id",
+          "cachedResultName": "ERP-AI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBy2R0JR4LieJ8F",
+          "mode": "id",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "id"
+          ],
+          "value": {
+            "id": "={{ $('Search New Leads').item.json.id }}",
+            "Status": "Contacted"
+          }
+        },
+        "options": {}
+      },
+      "retryOnFail": true
+    },
+    {
+      "id": "65f4dd71-94de-428b-9d67-fc3fb37f94de",
+      "name": "Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        360
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Every 3 Hours": {
+      "main": [
+        [
+          {
+            "node": "Search New Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search New Leads": {
+      "main": [
+        [
+          {
+            "node": "Write Cold Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Cold Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Mark Contacted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Cold Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

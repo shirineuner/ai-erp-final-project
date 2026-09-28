@@ -39,33 +39,42 @@
 
 ## 🏗️ ארכיטקטורה
 
-<div dir="ltr">
+```mermaid
+flowchart TD
+    APP["אפליקציית Lovable<br/>ממשק ניהול"]:::src
+    TG["טלגרם<br/>שני בוטים"]:::src
+    EXT["מקור לידים חיצוני"]:::src
 
-```
-                    ┌─────────────────────────┐
-                    │   אפליקציית Lovable     │
-                    │  ממשק ניהול בדפדפן      │
-                    └───────────┬─────────────┘
-                                │ POST · webhook מאובטח
-                                ▼
-   ╔════════════════════════════════════════════════════════╗
-   ║                      n8n Cloud                         ║
-   ║                                                        ║
-   ║   WF1  אימות מסמכי מס        WF6  הטמעת מדיניות        ║
-   ║   WF2  קליטת לידים            WF7  הטמעת מוצרים        ║
-   ║   WF3  מיילים יזומים          WF8  הפקת חשבונית         ║
-   ║   WF4  זיהוי מענה             WF9  סוכן מנהל            ║
-   ║   WF5  סוכן שירות לקוחות      WF13 API לאפליקציה        ║
-   ║                                                        ║
-   ║   ⚠ WF0  טיפול מרכזי בשגיאות — מחובר לכולן            ║
-   ╚═══┬──────────┬──────────┬──────────┬═══════════════════╝
-       │          │          │          │
-       ▼          ▼          ▼          ▼
-    Airtable    Gmail    Telegram   Google Drive
-    4 טבלאות             2 בוטים    קבצי חשבונית
+    APP -->|webhook| WF13["WF13 · API לאפליקציה"]
+    EXT -->|webhook| WF2["WF2 · קליטת לידים"]
+    TG --> WF5["WF5 · סוכן שירות לקוחות"]
+    TG --> WF9["WF9 · סוכן מנהל"]
+
+    AT[("Airtable · 4 טבלאות")]:::data
+    RAG[("מאגרים וקטוריים<br/>mypolicies · theproducts")]:::data
+
+    WF2 --> AT
+    WF13 --> AT
+    WF9 --> AT
+    AT --> WF1["WF1 · חישוב מע״מ"] --> AT
+    AT --> WF3["WF3 · מייל יזום"] --> GM["Gmail"]:::ext
+    GM --> WF4["WF4 · זיהוי מענה"] --> AT
+    AT --> WF8["WF8 · הפקת חשבונית"] --> GD["Google Drive"]:::ext
+    GD --> AT
+
+    WF6["WF6 · הטמעת מדיניות"] --> RAG
+    WF7["WF7 · הטמעת מוצרים"] --> RAG
+    RAG --> WF5
+
+    WF0["WF0 · טיפול מרכזי בשגיאות"]:::err -.->|התראה| TG
+
+    classDef src fill:#ccfbf1,stroke:#0f766e,color:#134e4a
+    classDef data fill:#fff,stroke:#134e4a,stroke-width:2px,color:#134e4a
+    classDef ext fill:#f1f5f9,stroke:#64748b,color:#334155
+    classDef err fill:#fef3c7,stroke:#b45309,color:#b45309
 ```
 
-</div>
+<sub>WF0 מוגדר כ-Error Workflow בכל אחת מהאוטומציות, ולכן הוא נקרא מכולן ולא רק מהמסלול המסומן.</sub>
 
 ---
 
@@ -182,45 +191,34 @@ output)` עם ניסיון חוזר, ומנותבים לענף Error ייעוד�
 production נכשלת, n8n מפעיל אותו אוטומטית והוא שולח לטלגרם את שם האוטומציה, הצומת
 שנכשל, הודעת השגיאה המקורית וקישור ישיר להרצה.
 
-<sub>הוכחה: `Screen shots/FailAutomatioError_Managerbot_280926.jpg`</sub>
+<sub>הוכחה: `screenshots/FailAutomatioError_Managerbot_280926.jpg`</sub>
 
 ---
 
 ## 📁 מבנה התיקיות
 
-<div dir="ltr">
-
-```
-Project Final/
-├── README.md         ← הקובץ הזה
-├── workflows/        ← קובצי JSON של האוטומציות, מוכנים לייבוא
-├── n8n/              ← קובצי המקור של המנחה, ללא שינוי
-├── policies/         ← מסמכי המדיניות שהוזנו ל-RAG
-├── products/         ← קטלוג המוצרים
-├── templates/        ← תבנית החשבונית
-├── app/              ← תיעוד אפליקציית Lovable
-├── docs/             ← בדיקת האבטחה
-├── Screen shots/     ← צילומי מסך מהמערכת הפועלת
-└── Documents/        ← מסמך הדרישות
-```
-
-</div>
+| תיקייה | תוכן |
+|:--|:--|
+| `workflows/` | קובצי JSON של 11 האוטומציות, מוכנים לייבוא ל-n8n |
+| `n8n/` | קובצי המקור של המנחה, ללא שינוי |
+| `policies/` | 12 מסמכי המדיניות שהוזנו ל-RAG |
+| `products/` | קטלוג המוצרים |
+| `templates/` | תבנית החשבונית ודוגמת פלט |
+| `app/` | תיעוד אפליקציית Lovable וה-prompt שבנה אותה |
+| `docs/` | בדיקת האבטחה |
+| `screenshots/` | צילומי מסך מהמערכת הפועלת |
+| `Documents/` | מסמך הדרישות של הקורס |
+| `README.md` · `README.html` | התיעוד הזה, בשתי גרסאות |
 
 ---
 
 ## 🚀 הפעלה מאפס
 
-<div dir="ltr">
-
-```
-1.  ייבוא קובצי ה-JSON מתיקיית workflows ל-n8n Cloud
-2.  חיבור credentials — Airtable · OpenAI · Gmail · Google Drive · 2 בוטי טלגרם
-3.  הרצה חד-פעמית של WF6 ו-WF7 לטעינת המאגרים הוקטוריים
-4.  בהגדרות כל אוטומציה — בחירת WF0 בשדה Error Workflow
-5.  Publish
-```
-
-</div>
+1. ייבוא קובצי ה-JSON מתיקיית `workflows` ל-n8n Cloud
+2. חיבור credentials — Airtable · OpenAI · Gmail · Google Drive · שני בוטי טלגרם
+3. הרצה חד-פעמית של WF6 ו-WF7 לטעינת המאגרים הוקטוריים
+4. בהגדרות כל אוטומציה — בחירת WF0 בשדה Error Workflow
+5. Publish
 
 <div align="center">
 <sub>נבנה ללא קוד · ספטמבר 2026</sub>
